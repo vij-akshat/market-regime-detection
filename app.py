@@ -288,7 +288,7 @@ elif page == "📊 SVD Analysis":
                     yaxis=dict(title="Variance (%)", gridcolor="#1e2a38"),
                     margin=dict(l=40, r=20, t=50, b=40), showlegend=False,
                 )
-                placeholder.plotly_chart(fig, use_container_width=True, key="anim_variance_bar")
+                placeholder.plotly_chart(fig, use_container_width=True, key="pc_1")
                 time.sleep(0.03)
 
         with col2:
@@ -313,7 +313,7 @@ elif page == "📊 SVD Analysis":
                     yaxis=dict(title="Cumulative %", gridcolor="#1e2a38", range=[0, 105]),
                     margin=dict(l=40, r=20, t=50, b=40),
                 )
-                placeholder2.plotly_chart(fig2, use_container_width=True, key="anim_cumulative_line")
+                placeholder2.plotly_chart(fig2, use_container_width=True, key="pc_2")
                 time.sleep(0.03)
 
         st.markdown(
@@ -342,7 +342,7 @@ elif page == "📊 SVD Analysis":
             height=420, title="Asset Loadings on Principal Components",
             margin=dict(l=80, r=20, t=70, b=40),
         )
-        st.plotly_chart(fig3, use_container_width=True, key="chart_0")
+        st.plotly_chart(fig3, use_container_width=True, key="pc_3")
         st.markdown(
             '<div class="insight-box">PC1: all sectors load with the same sign → market factor. '
             'PC2: growth sectors (Tech, Disc) vs defensives (Staples, Utes) → rotation factor.</div>',
@@ -367,7 +367,7 @@ elif page == "📊 SVD Analysis":
             yaxis=dict(title="Variance %", gridcolor="#1e2a38"),
             margin=dict(l=50, r=20, t=50, b=40),
         )
-        st.plotly_chart(fig4, use_container_width=True, key="chart_1")
+        st.plotly_chart(fig4, use_container_width=True, key="pc_4")
         eff_dim = 1 / (evr**2).sum()
         st.markdown(
             f'<div class="insight-box">Effective dimensionality (participation ratio): '
@@ -405,7 +405,7 @@ elif page == "🗺️ Regime Map":
             margin=dict(l=50, r=20, t=50, b=50),
             legend=dict(bgcolor="rgba(0,0,0,0)"),
         )
-        st.plotly_chart(fig, use_container_width=True, key="chart_2")
+        st.plotly_chart(fig, use_container_width=True, key="pc_5")
 
     with tab2:
         st.markdown("Regime label for each trading day over time.")
@@ -427,7 +427,7 @@ elif page == "🗺️ Regime Map":
             margin=dict(l=130, r=20, t=50, b=50),
             legend=dict(bgcolor="rgba(0,0,0,0)"),
         )
-        st.plotly_chart(fig2, use_container_width=True, key="chart_3")
+        st.plotly_chart(fig2, use_container_width=True, key="pc_6")
 
     with tab3:
         st.markdown("Distance from origin in PC space — higher = more extreme market move.")
@@ -463,7 +463,7 @@ elif page == "🗺️ Regime Map":
                 margin=dict(l=50, r=20, t=50, b=50),
                 legend=dict(bgcolor="rgba(0,0,0,0)"),
             )
-            placeholder.plotly_chart(fig3, use_container_width=True, key="anim_intensity")
+            placeholder.plotly_chart(fig3, use_container_width=True, key="pc_7")
             time.sleep(0.02)
 
 
@@ -523,7 +523,7 @@ elif page == "📉 Regime Stats":
         height=580, title="Annualized Sector Returns by Regime",
         margin=dict(l=100, r=20, t=70, b=40),
     )
-    st.plotly_chart(fig, use_container_width=True, key="chart_4")
+    st.plotly_chart(fig, use_container_width=True, key="pc_8")
 
 
 # ═══════════════════════════════════════════════════════
@@ -550,7 +550,7 @@ elif page == "🔄 Transitions":
             xaxis=dict(title="To Regime"), yaxis=dict(title="From Regime"),
             margin=dict(l=130, r=20, t=60, b=80),
         )
-        st.plotly_chart(fig, use_container_width=True, key="chart_5")
+        st.plotly_chart(fig, use_container_width=True, key="pc_9")
         persistence = np.diag(trans.values).mean()
         st.markdown(
             f'<div class="insight-box">Average regime persistence: <strong>{persistence:.1f}%</strong> per day. '
@@ -594,7 +594,7 @@ elif page == "🔄 Transitions":
             yaxis=dict(title="Duration (days)", gridcolor="#1e2a38"),
             margin=dict(l=50, r=20, t=50, b=80),
         )
-        st.plotly_chart(fig2, use_container_width=True, key="chart_6")
+        st.plotly_chart(fig2, use_container_width=True, key="pc_10")
 
 
 # ═══════════════════════════════════════════════════════
@@ -631,7 +631,7 @@ elif page == "📈 Rolling Analysis":
                 yaxis=dict(title=ylabel, gridcolor="#1e2a38"),
                 margin=dict(l=50, r=80, t=50, b=50),
             )
-            placeholder.plotly_chart(fig, use_container_width=True, key="anim_rolling")
+            placeholder.plotly_chart(fig, use_container_width=True, key="pc_11")
             time.sleep(0.02)
 
     with tab1:
