@@ -109,32 +109,30 @@ def load_data(years_back: int):
 
 
 @st.cache_data(show_spinner=False)
-def run_svd(returns_json: str, n_components: int):
-    returns = pd.read_json(returns_json)
-    R = returns.values
+def run_svd(_returns: pd.DataFrame, n_components: int):
+    R = _returns.values
     mean = R.mean(axis=0)
     centered = R - mean
     U, S, Vt = np.linalg.svd(centered, full_matrices=False)
     var     = S ** 2
     evr     = var / var.sum()
     projs   = centered @ Vt[:n_components].T
-    proj_df = pd.DataFrame(projs, index=returns.index,
+    proj_df = pd.DataFrame(projs, index=_returns.index,
                            columns=[f"PC{i+1}" for i in range(n_components)])
-    loadings = pd.DataFrame(Vt[:n_components].T, index=returns.columns,
+    loadings = pd.DataFrame(Vt[:n_components].T, index=_returns.columns,
                             columns=[f"PC{i+1}" for i in range(n_components)])
     return evr, proj_df, loadings, S
 
 
 @st.cache_data(show_spinner=False)
-def rolling_svd(returns_json: str, window: int):
-    returns = pd.read_json(returns_json)
+def rolling_svd(_returns: pd.DataFrame, window: int):
     results = []
-    for i in range(window, len(returns)):
-        w = returns.iloc[i-window:i].values
+    for i in range(window, len(_returns)):
+        w = _returns.iloc[i-window:i].values
         _, S, _ = np.linalg.svd(w - w.mean(axis=0), full_matrices=False)
         v = (S**2) / (S**2).sum()
         results.append({
-            "date": returns.index[i],
+            "date": _returns.index[i],
             "pc1_var": v[0], "pc2_var": v[1],
             "top3_var": v[:3].sum(),
             "eff_dim": 1 / (v**2).sum(),
@@ -189,18 +187,18 @@ if err or returns is None:
     st.error(f"Data fetch failed: {err}. Check your internet connection.")
     st.stop()
 
-ret_json = returns.to_json()
-evr, proj_df, loadings, S_vals = run_svd(ret_json, n_components)
+ret_json = returns.to_json()  # kept for legacy, unused below
+evr, proj_df, loadings, S_vals = run_svd(returns, n_components)
 regimes = classify_regimes(proj_df)
 var_pct  = evr * 100
 cum_var  = np.cumsum(var_pct)
 
 # Rolling (only when needed — compute upfront for responsiveness)
 @st.cache_data(show_spinner=False)
-def get_rolling(ret_json, window):
-    return rolling_svd(ret_json, window)
+def get_rolling(_returns, window):
+    return rolling_svd(_returns, window)
 
-roll_stats = get_rolling(ret_json, roll_window)
+roll_stats = get_rolling(returns, roll_window)
 
 
 # ═══════════════════════════════════════════════════════
