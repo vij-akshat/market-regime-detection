@@ -203,10 +203,7 @@ with st.sidebar:
     years_back   = st.slider("Years of history", 1, 5, 3)
     n_components = st.slider("PC components", 2, 5, 3)
     roll_window  = st.slider("Rolling window (days)", 21, 126, 63)
-    st.divider()
-    st.markdown("### Resources")
-    st.markdown("[Math Derivations](docs/math_derivations.md)")
-    st.markdown("[Parameter Guide](docs/parameter_guide.md)")
+
 
 
 # ═══════════════════════════════════════════════════════
