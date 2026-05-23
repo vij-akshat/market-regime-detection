@@ -84,23 +84,29 @@ SECTOR_ETFS = {
 # ─────────────────────────────────────────────
 @st.cache_data(show_spinner=False)
 def load_data(years_back: int):
-    try:
-        import yfinance as yf
-        end = datetime.now()
-        start = end - timedelta(days=years_back * 365)
-        tickers = list(SECTOR_ETFS.keys())
-        raw = yf.download(tickers, start=start, end=end, progress=False, auto_adjust=True)
-        if isinstance(raw.columns, pd.MultiIndex):
-            prices = raw["Close"] if "Close" in raw.columns.get_level_values(0) else raw["Adj Close"]
-        else:
-            prices = raw
-        prices.columns = [SECTOR_ETFS.get(c, c) for c in prices.columns]
-        prices = prices.dropna()
-        returns = np.log(prices / prices.shift(1)).dropna()
-        return prices, returns, None
-    except Exception as e:
-        return None, None, str(e)
-
+    import yfinance as yf
+    import time as _time
+    end   = datetime.now()
+    start = end - timedelta(days=years_back * 365)
+    tickers = list(SECTOR_ETFS.keys())
+    for attempt in range(3):
+        try:
+            raw = yf.download(tickers, start=start, end=end, progress=False, auto_adjust=True)
+            if isinstance(raw.columns, pd.MultiIndex):
+                prices = raw["Close"] if "Close" in raw.columns.get_level_values(0) else raw["Adj Close"]
+            else:
+                prices = raw
+            prices.columns = [SECTOR_ETFS.get(c, c) for c in prices.columns]
+            prices = prices.dropna()
+            if len(prices) < 30:
+                raise ValueError("Too few rows — possible rate limit")
+            returns = np.log(prices / prices.shift(1)).dropna()
+            return prices, returns, None
+        except Exception as e:
+            if attempt < 2:
+                _time.sleep(3 * (attempt + 1))
+            else:
+                return None, None, str(e)
 
 @st.cache_data(show_spinner=False)
 def run_svd(_returns: pd.DataFrame, n_components: int):
@@ -174,13 +180,16 @@ def animated_series(series, title, ylabel, color, fill_color, n_steps,
             yaxis=dict(title=ylabel, gridcolor="#1e2a38"),
             margin=dict(l=50, r=80, t=50, b=50),
         )
-        slot.plotly_chart(fig, use_container_width=True)
+        fig.add_annotation(text="uid_1", x=0, y=0, opacity=0, showarrow=False, xref="paper", yref="paper")
+        slot.plotly_chart(fig, width='stretch', key=f"anim_176_{i}")
         time.sleep(0.02)
 
 
 # ═══════════════════════════════════════════════════════
 # SIDEBAR
 # ═══════════════════════════════════════════════════════
+n_steps = 60  # max animation fps
+
 with st.sidebar:
     st.markdown("## Market Regime Detection")
     st.markdown("*SVD-based market state identification*")
@@ -194,7 +203,6 @@ with st.sidebar:
     years_back   = st.slider("Years of history", 1, 5, 3)
     n_components = st.slider("PC components", 2, 5, 3)
     roll_window  = st.slider("Rolling window (days)", 21, 126, 63)
-    n_steps      = st.slider("Animation steps", 15, 60, 35)
     st.divider()
     st.markdown("### Resources")
     st.markdown("[Math Derivations](docs/math_derivations.md)")
@@ -207,8 +215,11 @@ with st.sidebar:
 with st.spinner("Fetching sector ETF data…"):
     prices, returns, err = load_data(years_back)
 
-if err or returns is None:
-    st.error(f"Data fetch failed: {err}. Check your internet connection.")
+if err or returns is None or len(returns) == 0:
+    st.error(
+        "Could not load market data. Yahoo Finance rate-limits cloud servers on first load. "
+        "Wait 30 seconds and refresh the page."
+    )
     st.stop()
 
 evr, proj_df, loadings, S_vals = run_svd(returns, n_components)
@@ -300,7 +311,8 @@ elif page == "SVD Analysis":
                     yaxis=dict(title="Variance (%)", gridcolor="#1e2a38"),
                     margin=dict(l=40, r=20, t=50, b=40),
                 )
-                slot_bar.plotly_chart(fig, use_container_width=True)
+                fig.add_annotation(text="uid_2", x=0, y=0, opacity=0, showarrow=False, xref="paper", yref="paper")
+                slot_bar.plotly_chart(fig, width='stretch', key=f"anim_302_{i}")
                 time.sleep(0.03)
 
         with col2:
@@ -324,7 +336,8 @@ elif page == "SVD Analysis":
                     yaxis=dict(title="Cumulative %", gridcolor="#1e2a38", range=[0, 105]),
                     margin=dict(l=40, r=20, t=50, b=40),
                 )
-                slot_cum.plotly_chart(fig2, use_container_width=True)
+                fig2.add_annotation(text="uid_3", x=0, y=0, opacity=0, showarrow=False, xref="paper", yref="paper")
+                slot_cum.plotly_chart(fig2, width='stretch', key=f"anim_326_{step}")
                 time.sleep(0.03)
 
         st.markdown(
@@ -352,7 +365,8 @@ elif page == "SVD Analysis":
             height=420, title="Asset Loadings on Principal Components",
             margin=dict(l=80, r=20, t=70, b=40),
         )
-        st.plotly_chart(fig3, use_container_width=True, key="loadings_chart")
+        fig3.add_annotation(text="uid_4", x=0, y=0, opacity=0, showarrow=False, xref="paper", yref="paper")
+        st.plotly_chart(fig3, width='stretch', key="loadings_chart")
         st.markdown(
             '<div class="insight-box">PC1: all sectors load same sign → market factor. '
             'PC2: Tech/Disc vs Staples/Utes → rotation factor.</div>',
@@ -376,7 +390,8 @@ elif page == "SVD Analysis":
             yaxis=dict(title="Variance %", gridcolor="#1e2a38"),
             margin=dict(l=50, r=20, t=50, b=40),
         )
-        st.plotly_chart(fig4, use_container_width=True, key="scree_chart")
+        fig4.add_annotation(text="uid_5", x=0, y=0, opacity=0, showarrow=False, xref="paper", yref="paper")
+        st.plotly_chart(fig4, width='stretch', key="scree_chart")
         eff_dim = 1 / (evr ** 2).sum()
         st.markdown(
             f'<div class="insight-box">Effective dimensionality: <strong>{eff_dim:.2f}</strong> '
@@ -416,7 +431,8 @@ elif page == "Regime Map":
             margin=dict(l=50, r=20, t=50, b=50),
             legend=dict(bgcolor="rgba(0,0,0,0)"),
         )
-        st.plotly_chart(fig, use_container_width=True, key="regime_scatter")
+        fig.add_annotation(text="uid_6", x=0, y=0, opacity=0, showarrow=False, xref="paper", yref="paper")
+        st.plotly_chart(fig, width='stretch', key="regime_scatter")
 
     with tab_timeline:
         st.markdown("Regime label for each trading day over time.")
@@ -438,7 +454,8 @@ elif page == "Regime Map":
             margin=dict(l=130, r=20, t=50, b=50),
             legend=dict(bgcolor="rgba(0,0,0,0)"),
         )
-        st.plotly_chart(fig2, use_container_width=True, key="regime_timeline")
+        fig2.add_annotation(text="uid_7", x=0, y=0, opacity=0, showarrow=False, xref="paper", yref="paper")
+        st.plotly_chart(fig2, width='stretch', key="regime_timeline")
 
     with tab_intensity:
         st.markdown("Distance from origin in PC space — higher = more extreme market move.")
@@ -471,7 +488,8 @@ elif page == "Regime Map":
                 margin=dict(l=50, r=20, t=50, b=50),
                 legend=dict(bgcolor="rgba(0,0,0,0)"),
             )
-            slot.plotly_chart(fig3, use_container_width=True)
+            fig3.add_annotation(text="uid_8", x=0, y=0, opacity=0, showarrow=False, xref="paper", yref="paper")
+            slot.plotly_chart(fig3, width='stretch', key=f"anim_473_{i}")
             time.sleep(0.02)
 
 
@@ -512,7 +530,7 @@ elif page == "Regime Stats":
     st.markdown('<div class="section-header">Full Statistics</div>', unsafe_allow_html=True)
     st.dataframe(
         metrics_df.style.background_gradient(subset=["Sharpe"], cmap="RdYlGn"),
-        use_container_width=True)
+        width='stretch')
 
     st.markdown('<div class="section-header">Sector Performance by Regime</div>',
                 unsafe_allow_html=True)
@@ -531,7 +549,8 @@ elif page == "Regime Stats":
         height=580, title="Annualized Sector Returns by Regime",
         margin=dict(l=100, r=20, t=70, b=40),
     )
-    st.plotly_chart(fig_sectors, use_container_width=True, key="sector_perf")
+    fig_sectors.add_annotation(text="uid_9", x=0, y=0, opacity=0, showarrow=False, xref="paper", yref="paper")
+    st.plotly_chart(fig_sectors, width='stretch', key="sector_perf")
 
 
 # ═══════════════════════════════════════════════════════
@@ -558,7 +577,8 @@ elif page == "Transitions":
             xaxis=dict(title="To Regime"), yaxis=dict(title="From Regime"),
             margin=dict(l=130, r=20, t=60, b=80),
         )
-        st.plotly_chart(fig_trans, use_container_width=True, key="transition_heatmap")
+        fig_trans.add_annotation(text="uid_10", x=0, y=0, opacity=0, showarrow=False, xref="paper", yref="paper")
+        st.plotly_chart(fig_trans, width='stretch', key="transition_heatmap")
         persistence = np.diag(trans.values).mean()
         st.markdown(
             f'<div class="insight-box">Average regime persistence: '
@@ -584,7 +604,7 @@ elif page == "Transitions":
                     "Median Duration": round(np.median(durs), 1),
                     "Max Duration (days)": int(np.max(durs)),
                 })
-        st.dataframe(pd.DataFrame(dur_rows).set_index("Regime"), use_container_width=True)
+        st.dataframe(pd.DataFrame(dur_rows).set_index("Regime"), width='stretch')
 
         fig_box = go.Figure()
         for regime, color in REGIME_COLORS.items():
@@ -599,7 +619,8 @@ elif page == "Transitions":
             yaxis=dict(title="Duration (days)", gridcolor="#1e2a38"),
             margin=dict(l=50, r=20, t=50, b=80),
         )
-        st.plotly_chart(fig_box, use_container_width=True, key="duration_box")
+        fig_box.add_annotation(text="uid_11", x=0, y=0, opacity=0, showarrow=False, xref="paper", yref="paper")
+        st.plotly_chart(fig_box, width='stretch', key="duration_box")
 
 
 # ═══════════════════════════════════════════════════════
