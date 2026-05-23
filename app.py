@@ -152,7 +152,7 @@ def classify_regimes(proj_df):
 
 
 def animated_series(series, title, ylabel, color, fill_color, n_steps,
-                    hline=None, hline_label=""):
+                    hline=None, hline_label="", chart_id="roll"):
     """Animate a time series building up left to right inside an st.empty() slot."""
     slot = st.empty()
     x_full = series.index
@@ -180,8 +180,8 @@ def animated_series(series, title, ylabel, color, fill_color, n_steps,
             yaxis=dict(title=ylabel, gridcolor="#1e2a38"),
             margin=dict(l=50, r=80, t=50, b=50),
         )
-        fig.add_annotation(text="uid_1", x=0, y=0, opacity=0, showarrow=False, xref="paper", yref="paper")
-        slot.plotly_chart(fig, width='stretch', key=f"anim_176_{i}")
+        fig.add_annotation(text=f"uid_{chart_id}_{i}", x=0, y=0, opacity=0, showarrow=False, xref="paper", yref="paper")
+        slot.plotly_chart(fig, width='stretch', key=f"anim_{chart_id}_{i}")
         time.sleep(0.02)
 
 
@@ -311,8 +311,8 @@ elif page == "SVD Analysis":
                     yaxis=dict(title="Variance (%)", gridcolor="#1e2a38"),
                     margin=dict(l=40, r=20, t=50, b=40),
                 )
-                fig.add_annotation(text="uid_2", x=0, y=0, opacity=0, showarrow=False, xref="paper", yref="paper")
-                slot_bar.plotly_chart(fig, width='stretch', key=f"anim_302_{i}")
+                fig.add_annotation(text=f"uid_bar_{step}", x=0, y=0, opacity=0, showarrow=False, xref="paper", yref="paper")
+                slot_bar.plotly_chart(fig, width='stretch', key=f"anim_bar_{step}")
                 time.sleep(0.03)
 
         with col2:
@@ -336,8 +336,8 @@ elif page == "SVD Analysis":
                     yaxis=dict(title="Cumulative %", gridcolor="#1e2a38", range=[0, 105]),
                     margin=dict(l=40, r=20, t=50, b=40),
                 )
-                fig2.add_annotation(text="uid_3", x=0, y=0, opacity=0, showarrow=False, xref="paper", yref="paper")
-                slot_cum.plotly_chart(fig2, width='stretch', key=f"anim_326_{step}")
+                fig2.add_annotation(text=f"uid_3_{step}", x=0, y=0, opacity=0, showarrow=False, xref="paper", yref="paper")
+                slot_cum.plotly_chart(fig2, width='stretch', key=f"anim_cum_{step}")
                 time.sleep(0.03)
 
         st.markdown(
@@ -638,6 +638,7 @@ elif page == "Rolling Analysis":
             roll_stats["pc1_var"] * 100,
             f"Rolling PC1 Variance ({roll_window}-day window)",
             "PC1 Variance (%)", C["secondary"], "rgba(52,152,219,0.15)", n_steps,
+            chart_id="pc1",
         )
         st.markdown(
             '<div class="insight-box">Spikes = market stress — sectors moving together, '
@@ -649,6 +650,7 @@ elif page == "Rolling Analysis":
             roll_stats["eff_dim"],
             f"Rolling Effective Dimensionality ({roll_window}-day window)",
             "Effective Dim", C["purple"], "rgba(155,89,182,0.15)", n_steps,
+            chart_id="effdim",
         )
         st.markdown(
             '<div class="insight-box">Low values (near 1–2) = correlated, systemic market. '
@@ -661,6 +663,7 @@ elif page == "Rolling Analysis":
             f"Rolling Top-3 PC Variance ({roll_window}-day window)",
             "Top-3 Variance (%)", C["primary"], "rgba(46,204,113,0.15)", n_steps,
             hline=90, hline_label="90%",
+            chart_id="top3",
         )
         st.markdown(
             '<div class="insight-box">When top-3 PCs explain >90% of variance, '
