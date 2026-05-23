@@ -23,7 +23,7 @@ Market regimes are persistent behavioral states where asset correlations, volati
 
 ---
 
-## Mathematical Foundation -- [Full Derivations](docs/math_derivations.md)
+## Mathematical Foundation -- [Full Derivations](docs/math_derivations.md) -- [Full Derivations](docs/math_derivations.md)
 
 Given a returns matrix $R \in \mathbb{R}^{n \times m}$ (days × assets), SVD decomposes it as:
 
@@ -84,12 +84,21 @@ streamlit run app.py
 
 ---
 
-## Key Results -- [Parameter Calibration Guide](docs/parameter_guide.md)
+## Key Results -- [Parameter Calibration Guide](docs/parameter_guide.md) -- [Parameter Calibration Guide](docs/parameter_guide.md)
 
 - PC1 (market factor) typically explains **40–60%** of cross-sector variance
 - Top 3 PCs capture **75–90%** of total variance
 - Effective dimensionality collapses to **~2** during stress periods (2020, 2022)
 - Regime persistence: diagonal of transition matrix typically **50–70%** per day
+
+---
+
+## Documentation
+
+| Document | Contents |
+|----------|----------|
+| [Math Derivations](docs/math_derivations.md) | SVD proofs, regime classification, effective dimensionality, transition matrix, rolling SVD |
+| [Parameter Guide](docs/parameter_guide.md) | Asset universe, date range, rolling window, classification thresholds |
 
 ---
 
